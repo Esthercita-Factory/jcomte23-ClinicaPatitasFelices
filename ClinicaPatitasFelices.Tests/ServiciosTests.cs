@@ -136,8 +136,13 @@ public class ClienteServiceTests
     public void CrearMascotaParaCliente_RegistraYVinculaEnUnSoloPaso()
     {
         var cliente = CrearCliente();
-        var mascotaNueva = new Mascota(
-            "Huesos", Especie.Perro, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddMonths(-8));
+        var mascotaNueva = new Mascota
+        {
+            Nombre = "Huesos",
+            Especie = Especie.Perro,
+            Raza = "Criollo",
+            FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddMonths(-8)
+        };
 
         var seCreo = _clienteService.CrearMascotaParaCliente(cliente.Id, mascotaNueva);
 
@@ -152,8 +157,13 @@ public class ClienteServiceTests
     [Test]
     public void CrearMascotaParaCliente_DevuelveFalseSiElClienteNoExiste()
     {
-        var mascotaNueva = new Mascota(
-            "Huesos", Especie.Perro, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddMonths(-8));
+        var mascotaNueva = new Mascota
+        {
+            Nombre = "Huesos",
+            Especie = Especie.Perro,
+            Raza = "Criollo",
+            FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddMonths(-8)
+        };
 
         Assert.That(_clienteService.CrearMascotaParaCliente(Guid.NewGuid(), mascotaNueva), Is.False);
     }
@@ -193,7 +203,7 @@ public class ClienteServiceTests
         var cliente = _clienteService.ConsultarClientePorDocumento("52987654");
 
         Assert.That(cliente, Is.Not.Null);
-        Assert.That(cliente!.CantidadDeMascotas, Is.EqualTo(3));
+        Assert.That(cliente!.Mascotas.Count, Is.EqualTo(3));
     }
 }
 

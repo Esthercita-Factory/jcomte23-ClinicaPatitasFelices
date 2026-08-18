@@ -57,11 +57,9 @@ public class ClienteRepositoryTests
     }
 
     [Test]
-    public void EliminarCliente_DesvinculaSusMascotas()
+    public void Eliminar_SacaAlClienteDelAlmacen()
     {
         var cliente = RegistrarCliente();
-        var mascota = new Mascota("Tomas", Especie.Gato, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddMonths(-10));
-        cliente.AgregarMascota(mascota);
 
         var seElimino = _clienteRepository.Eliminar(cliente.Id);
 
@@ -69,33 +67,31 @@ public class ClienteRepositoryTests
         {
             Assert.That(seElimino, Is.True);
             Assert.That(_clienteRepository.ObtenerPorId(cliente.Id), Is.Null);
-            Assert.That(mascota.Dueno, Is.Null);
         });
     }
 
     [Test]
-    public void ActualizarCliente_CambiaDatosPersonalesYDeContacto()
+    public void Actualizar_GuardaLaEntidadModificada()
     {
         var cliente = RegistrarCliente();
+        cliente.Nombre = "Javier";
+        cliente.Apellido = "Combita";
 
-        var seActualizo = _clienteRepository.Actualizar(
-            cliente.Id, "Javier", "Combita", "3151234567", "nuevo@correo.com", null);
+        var seActualizo = _clienteRepository.Actualizar(cliente);
 
         Assert.Multiple(() =>
         {
             Assert.That(seActualizo, Is.True);
-            Assert.That(cliente.NombreCompleto, Is.EqualTo("Javier Combita"));
-            Assert.That(cliente.Telefono, Is.EqualTo("3151234567"));
-            Assert.That(cliente.Direccion, Is.Null);
+            Assert.That(_clienteRepository.ObtenerPorId(cliente.Id)!.NombreCompleto, Is.EqualTo("Javier Combita"));
         });
     }
 
     [Test]
-    public void ActualizarCliente_DevuelveFalseSiNoExiste()
+    public void Actualizar_DevuelveFalseSiElClienteNoEstaRegistrado()
     {
-        Assert.That(
-            _clienteRepository.Actualizar(Guid.NewGuid(), "A", "B", "300", null, null),
-            Is.False);
+        var ajeno = new Cliente("NO-REGISTRADO", "A", "B", "300");
+
+        Assert.That(_clienteRepository.Actualizar(ajeno), Is.False);
     }
 
     [Test]

@@ -5,27 +5,27 @@ namespace ClinicaPatitasFelices.Repositories;
 public interface IClienteRepository
 {
     // CREATE
-    bool Registrar(Cliente clienteNuevo);
+    public bool Registrar(Cliente clienteNuevo);
 
     // READ
-    List<Cliente> ObtenerTodos();
-    Cliente? ObtenerPorId(Guid id);
-    Cliente? ObtenerPorDocumento(string documento);
-    List<Cliente> FiltrarPorNombre(string textoDeBusqueda);
-    Cliente? ObtenerDuenoDeMascota(Guid mascotaId);
+    public List<Cliente> ObtenerTodos();
+    public Cliente? ObtenerPorId(Guid id);
+    public Cliente? ObtenerPorDocumento(string documento);
+    public List<Cliente> FiltrarPorNombre(string textoDeBusqueda);
+    public Cliente? ObtenerDuenoDeMascota(Guid mascotaId);
 
     // UPDATE
-    bool Actualizar(Guid id, string nombre, string apellido, string telefono, string? email, string? direccion);
+    public bool Actualizar(Cliente cliente);
 
     // DELETE
-    bool Eliminar(Guid id);
+    public bool Eliminar(Guid id);
 
     // CONSULTA DE LA RELACION
     // Asignar y desasignar mascotas es coordinacion entre dos entidades: vive en ClienteService.
-    List<Mascota> ObtenerMascotasDe(Guid clienteId);
+    public List<Mascota> ObtenerMascotasDe(Guid clienteId);
 
     // VALIDACIONES / UTILIDADES
-    bool ExisteId(Guid id);
-    bool ExisteDocumento(string documento);
-    int Contar();
+    public bool ExisteId(Guid id);
+    public bool ExisteDocumento(string documento);
+    public int Contar();
 }

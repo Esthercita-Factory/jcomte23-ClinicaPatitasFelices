@@ -69,27 +69,23 @@ public class ClienteRepository : IClienteRepository
 
     public Cliente? ObtenerDuenoDeMascota(Guid mascotaId)
     {
-        return _clientes.FirstOrDefault(cliente => cliente.TieneMascota(mascotaId));
+        return _clientes.FirstOrDefault(
+            cliente => cliente.Mascotas.Any(mascota => mascota.Id == mascotaId));
     }
 
     // UPDATE
-    public bool Actualizar(
-        Guid id,
-        string nombre,
-        string apellido,
-        string telefono,
-        string? email,
-        string? direccion)
+    public bool Actualizar(Cliente cliente)
     {
-        var clienteExistente = ObtenerPorId(id);
+        ArgumentNullException.ThrowIfNull(cliente);
 
-        if (clienteExistente is null)
+        var indice = _clientes.FindIndex(registrado => registrado.Id == cliente.Id);
+
+        if (indice < 0)
         {
             return false;
         }
 
-        clienteExistente.ActualizarDatosPersonales(nombre, apellido);
-        clienteExistente.ActualizarDatosDeContacto(telefono, email, direccion);
+        _clientes[indice] = cliente;
 
         return true;
     }
@@ -106,11 +102,6 @@ public class ClienteRepository : IClienteRepository
         if (clienteExistente is null)
         {
             return false;
-        }
-
-        foreach (var mascota in clienteExistente.Mascotas.ToList())
-        {
-            clienteExistente.QuitarMascota(mascota);
         }
 
         return _clientes.Remove(clienteExistente);

@@ -17,7 +17,7 @@ public interface IMascotaRepository
     List<Mascota> FiltrarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses);
 
     // UPDATE
-    bool Actualizar(Guid id, string nombre, Especie especie, string raza, DateOnly fechaDeNacimiento, Sexo sexo);
+    bool Actualizar(Mascota mascota);
 
     // DELETE
     bool Eliminar(Guid id);

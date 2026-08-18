@@ -24,7 +24,7 @@ public class ManagerMascota
 
         var mascotaNueva = _mascotaService.CrearMascota(nombre, especie, raza, fechaDeNacimiento, sexo);
 
-        Console.WriteLine($"\n  >> Mascota registrada: {mascotaNueva}\n");
+        Console.WriteLine($"\n  >> Mascota registrada: {mascotaNueva.Nombre} ({mascotaNueva.Especie}, {mascotaNueva.Raza})\n");
     }
 
     public void MostrarTodasLasMascotas()

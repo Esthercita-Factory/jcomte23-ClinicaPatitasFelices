@@ -3,6 +3,10 @@ using ClinicaPatitasFelices.Repositories;
 
 namespace ClinicaPatitasFelices.Services;
 
+/// <summary>
+/// Reglas de negocio de las mascotas. Los modelos son contenedores de datos, asi
+/// que la validacion y la normalizacion se hacen aqui, antes de tocar el repositorio.
+/// </summary>
 public class MascotaService : IMascotaService
 {
     /// <summary>Hasta esta edad se considera cachorro para efectos de la clinica.</summary>
@@ -17,13 +21,16 @@ public class MascotaService : IMascotaService
         _mascotaRepository = mascotaRepository;
     }
 
-    /// <summary>
-    /// Las reglas de integridad viven en el modelo: si algun dato es invalido, el
-    /// constructor de <see cref="Mascota"/> lanza y la excepcion sube tal cual.
-    /// </summary>
     public Mascota CrearMascota(string nombre, Especie especie, string raza, DateOnly fechaDeNacimiento, Sexo sexo)
     {
-        var mascotaNueva = new Mascota(nombre, especie, raza, fechaDeNacimiento, sexo);
+        var mascotaNueva = new Mascota
+        {
+            Nombre = ValidarTexto(nombre, nameof(nombre)),
+            Especie = especie,
+            Raza = ValidarTexto(raza, nameof(raza)),
+            FechaDeNacimiento = ValidarFechaDeNacimiento(fechaDeNacimiento),
+            Sexo = sexo
+        };
 
         _mascotaRepository.Registrar(mascotaNueva);
 
@@ -77,11 +84,6 @@ public class MascotaService : IMascotaService
         DateOnly fechaDeNacimiento,
         Sexo sexo)
     {
-        return _mascotaRepository.Actualizar(id, nombre, especie, raza, fechaDeNacimiento, sexo);
-    }
-
-    public bool AnotarPeso(Guid id, decimal pesoEnKg)
-    {
         var mascota = _mascotaRepository.ObtenerPorId(id);
 
         if (mascota is null)
@@ -89,9 +91,29 @@ public class MascotaService : IMascotaService
             return false;
         }
 
-        mascota.RegistrarPeso(pesoEnKg);
+        mascota.Nombre = ValidarTexto(nombre, nameof(nombre));
+        mascota.Especie = especie;
+        mascota.Raza = ValidarTexto(raza, nameof(raza));
+        mascota.FechaDeNacimiento = ValidarFechaDeNacimiento(fechaDeNacimiento);
+        mascota.Sexo = sexo;
 
-        return true;
+        return _mascotaRepository.Actualizar(mascota);
+    }
+
+    public bool AnotarPeso(Guid id, decimal pesoEnKg)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pesoEnKg);
+
+        var mascota = _mascotaRepository.ObtenerPorId(id);
+
+        if (mascota is null)
+        {
+            return false;
+        }
+
+        mascota.PesoEnKg = pesoEnKg;
+
+        return _mascotaRepository.Actualizar(mascota);
     }
 
     public bool MarcarComoEsterilizada(Guid id)
@@ -103,18 +125,54 @@ public class MascotaService : IMascotaService
             return false;
         }
 
-        mascota.MarcarComoEsterilizada();
+        mascota.EstaEsterilizada = true;
 
-        return true;
+        return _mascotaRepository.Actualizar(mascota);
     }
 
+    /// <summary>
+    /// Retira la mascota y la desvincula de su dueño, para no dejar al cliente
+    /// apuntando a una mascota que ya no existe.
+    /// </summary>
     public bool RetirarMascota(Guid id)
     {
+        var mascota = _mascotaRepository.ObtenerPorId(id);
+
+        if (mascota is null)
+        {
+            return false;
+        }
+
+        mascota.Dueno?.Mascotas.Remove(mascota);
+        mascota.Dueno = null;
+
         return _mascotaRepository.Eliminar(id);
     }
 
     public int ContarMascotas()
     {
         return _mascotaRepository.Contar();
+    }
+
+    private static string ValidarTexto(string valor, string nombreDelParametro)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(valor, nombreDelParametro);
+
+        return valor.Trim();
+    }
+
+    private static DateOnly ValidarFechaDeNacimiento(DateOnly fechaDeNacimiento)
+    {
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+        if (fechaDeNacimiento > hoy)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(fechaDeNacimiento),
+                fechaDeNacimiento,
+                "La fecha de nacimiento no puede estar en el futuro.");
+        }
+
+        return fechaDeNacimiento;
     }
 }

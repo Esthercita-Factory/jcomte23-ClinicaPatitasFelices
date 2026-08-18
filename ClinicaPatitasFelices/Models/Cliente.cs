@@ -1,33 +1,40 @@
 namespace ClinicaPatitasFelices.Models;
 
 /// <summary>
-/// Dueño de una o varias mascotas. La relacion Cliente 1 -- N Mascota se
-/// administra unicamente desde aquí para que las dos puntas nunca queden
-/// desincronizadas.
+/// Dueño de una o varias mascotas. Es un contenedor de datos: representa la fila
+/// de la tabla Cliente. Las reglas de negocio y la coherencia de la relacion con
+/// las mascotas viven en ClienteService.
 /// </summary>
 public class Cliente
 {
-    private readonly List<Mascota> _mascotas = [];
-
-    public Guid Id { get; }
-    public string Documento { get; private set; }
-    public string Nombre { get; private set; }
-    public string Apellido { get; private set; }
-    public string Telefono { get; private set; }
-    public string? Email { get; private set; }
-    public string? Direccion { get; private set; }
-    public DateOnly FechaDeRegistro { get; }
-
-    public string NombreCompleto => $"{Nombre} {Apellido}";
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Nombre { get; set; } = string.Empty;
+    public string Apellido { get; set; } = string.Empty;
+    public string Documento { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Direccion { get; set; }
+    
+    public DateOnly FechaDeRegistro { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
     /// <summary>
-    /// Solo lectura: agregar o quitar mascotas se hace con <see cref="AgregarMascota"/>
-    /// y <see cref="QuitarMascota"/>, que son los que mantienen la relacion consistente.
+    /// Contraparte de <see cref="Mascota.Dueno"/>. Con Entity Framework esta lista
+    /// se mapea a la clave foranea ClienteId de la tabla Mascota.
     /// </summary>
-    public IReadOnlyList<Mascota> Mascotas => _mascotas;
+    public List<Mascota> Mascotas { get; set; } = [];
 
-    public int CantidadDeMascotas => _mascotas.Count;
+    /// <summary>Derivado de Nombre y Apellido; no se persiste.</summary>
+    public string NombreCompleto => $"{Nombre} {Apellido}";
 
+    /// <summary>Lo usan Entity Framework y los inicializadores de objeto.</summary>
+    public Cliente()
+    {
+    }
+
+    /// <summary>
+    /// Atajo para armar un cliente completo. Solo asigna: la validacion y la
+    /// normalizacion de los datos son responsabilidad de ClienteService.
+    /// </summary>
     public Cliente(
         string documento,
         string nombre,
@@ -36,84 +43,11 @@ public class Cliente
         string? email = null,
         string? direccion = null)
     {
-        Id = Guid.NewGuid();
-        Documento = ValidarTexto(documento, nameof(documento));
-        Nombre = ValidarTexto(nombre, nameof(nombre));
-        Apellido = ValidarTexto(apellido, nameof(apellido));
-        Telefono = ValidarTexto(telefono, nameof(telefono));
-        Email = ValidarOpcional(email);
-        Direccion = ValidarOpcional(direccion);
-        FechaDeRegistro = DateOnly.FromDateTime(DateTime.Today);
-    }
-
-    public void ActualizarDatosPersonales(string nombre, string apellido)
-    {
-        Nombre = ValidarTexto(nombre, nameof(nombre));
-        Apellido = ValidarTexto(apellido, nameof(apellido));
-    }
-
-    public void ActualizarDatosDeContacto(string telefono, string? email, string? direccion)
-    {
-        Telefono = ValidarTexto(telefono, nameof(telefono));
-        Email = ValidarOpcional(email);
-        Direccion = ValidarOpcional(direccion);
-    }
-
-    /// <summary>
-    /// Registra una mascota a nombre de este cliente. Si la mascota ya tenia otro
-    /// dueño, se transfiere.
-    /// </summary>
-    /// <returns> False si la mascota ya estaba registrada con este mismo cliente.</returns>
-    public bool AgregarMascota(Mascota mascota)
-    {
-        ArgumentNullException.ThrowIfNull(mascota);
-
-        if (_mascotas.Any(registrada => registrada.Id == mascota.Id))
-        {
-            return false;
-        }
-
-        mascota.Dueno?.QuitarMascota(mascota);
-
-        _mascotas.Add(mascota);
-        mascota.AsignarDueno(this);
-
-        return true;
-    }
-
-    public bool QuitarMascota(Mascota mascota)
-    {
-        ArgumentNullException.ThrowIfNull(mascota);
-
-        if (!_mascotas.Remove(mascota))
-        {
-            return false;
-        }
-
-        mascota.AsignarDueno(null);
-
-        return true;
-    }
-
-    public bool TieneMascota(Guid mascotaId)
-    {
-        return _mascotas.Any(mascota => mascota.Id == mascotaId);
-    }
-
-    public override string ToString()
-    {
-        return $"{NombreCompleto} (doc. {Documento}) - {CantidadDeMascotas} mascota(s)";
-    }
-
-    private static string ValidarTexto(string valor, string nombreDelParametro)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(valor, nombreDelParametro);
-
-        return valor.Trim();
-    }
-
-    private static string? ValidarOpcional(string? valor)
-    {
-        return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        Documento = documento;
+        Nombre = nombre;
+        Apellido = apellido;
+        Telefono = telefono;
+        Email = email;
+        Direccion = direccion;
     }
 }

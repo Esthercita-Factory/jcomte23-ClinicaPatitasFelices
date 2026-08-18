@@ -4,8 +4,9 @@ using ClinicaPatitasFelices.Repositories;
 namespace ClinicaPatitasFelices.Services;
 
 /// <summary>
-/// Coordina clientes y mascotas. Las operaciones que tocan las dos entidades viven
-/// aqui y no en los repositorios: cada repositorio se ocupa de una sola entidad.
+/// Reglas de negocio de los clientes y coordinacion con las mascotas. Como los
+/// modelos son contenedores de datos, este servicio es el unico responsable de que
+/// Cliente.Mascotas y Mascota.Dueno se mantengan sincronizados.
 /// </summary>
 public class ClienteService : IClienteService
 {
@@ -29,8 +30,13 @@ public class ClienteService : IClienteService
         string? email,
         string? direccion)
     {
-        // Si algun dato es invalido, el constructor de Cliente lanza y la excepcion sube.
-        var clienteNuevo = new Cliente(documento, nombre, apellido, telefono, email, direccion);
+        var clienteNuevo = new Cliente(
+            ValidarTexto(documento, nameof(documento)),
+            ValidarTexto(nombre, nameof(nombre)),
+            ValidarTexto(apellido, nameof(apellido)),
+            ValidarTexto(telefono, nameof(telefono)),
+            NormalizarOpcional(email),
+            NormalizarOpcional(direccion));
 
         // El documento repetido si es un caso esperable del negocio, no un error.
         if (_clienteRepository.ExisteDocumento(clienteNuevo.Documento))
@@ -71,15 +77,50 @@ public class ClienteService : IClienteService
         string? email,
         string? direccion)
     {
-        return _clienteRepository.Actualizar(id, nombre, apellido, telefono, email, direccion);
+        var cliente = _clienteRepository.ObtenerPorId(id);
+
+        if (cliente is null)
+        {
+            return false;
+        }
+
+        cliente.Nombre = ValidarTexto(nombre, nameof(nombre));
+        cliente.Apellido = ValidarTexto(apellido, nameof(apellido));
+        cliente.Telefono = ValidarTexto(telefono, nameof(telefono));
+        cliente.Email = NormalizarOpcional(email);
+        cliente.Direccion = NormalizarOpcional(direccion);
+
+        return _clienteRepository.Actualizar(cliente);
     }
 
+    /// <summary>
+    /// Retira al cliente. Sus mascotas siguen registradas en la clinica, pero
+    /// quedan sin dueño asignado.
+    /// </summary>
     public bool RetirarCliente(Guid id)
     {
+        var cliente = _clienteRepository.ObtenerPorId(id);
+
+        if (cliente is null)
+        {
+            return false;
+        }
+
+        foreach (var mascota in cliente.Mascotas.ToList())
+        {
+            mascota.Dueno = null;
+        }
+
+        cliente.Mascotas.Clear();
+
         return _clienteRepository.Eliminar(id);
     }
 
     // Coordinacion entre clientes y mascotas
+    /// <summary>
+    /// Vincula una mascota ya registrada con un cliente, actualizando las dos puntas
+    /// de la relacion. Si la mascota tenia otro dueño, se transfiere.
+    /// </summary>
     public bool AsignarMascota(Guid clienteId, Guid mascotaId)
     {
         var cliente = _clienteRepository.ObtenerPorId(clienteId);
@@ -90,7 +131,18 @@ public class ClienteService : IClienteService
             return false;
         }
 
-        return cliente.AgregarMascota(mascota);
+        if (cliente.Mascotas.Any(registrada => registrada.Id == mascota.Id))
+        {
+            return false;
+        }
+
+        // Se saca del dueño anterior: una mascota tiene un solo dueño a la vez.
+        mascota.Dueno?.Mascotas.Remove(mascota);
+
+        cliente.Mascotas.Add(mascota);
+        mascota.Dueno = cliente;
+
+        return true;
     }
 
     public bool DesasignarMascota(Guid clienteId, Guid mascotaId)
@@ -103,7 +155,14 @@ public class ClienteService : IClienteService
             return false;
         }
 
-        return cliente.QuitarMascota(mascota);
+        if (!cliente.Mascotas.Remove(mascota))
+        {
+            return false;
+        }
+
+        mascota.Dueno = null;
+
+        return true;
     }
 
     public bool CrearMascotaParaCliente(Guid clienteId, Mascota mascotaNueva)
@@ -119,7 +178,10 @@ public class ClienteService : IClienteService
 
         _mascotaRepository.Registrar(mascotaNueva);
 
-        return cliente.AgregarMascota(mascotaNueva);
+        cliente.Mascotas.Add(mascotaNueva);
+        mascotaNueva.Dueno = cliente;
+
+        return true;
     }
 
     public List<Mascota> ConsultarMascotasDe(Guid clienteId)
@@ -135,5 +197,17 @@ public class ClienteService : IClienteService
     public int ContarClientes()
     {
         return _clienteRepository.Contar();
+    }
+
+    private static string ValidarTexto(string valor, string nombreDelParametro)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(valor, nombreDelParametro);
+
+        return valor.Trim();
+    }
+
+    private static string? NormalizarOpcional(string? valor)
+    {
+        return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
     }
 }
