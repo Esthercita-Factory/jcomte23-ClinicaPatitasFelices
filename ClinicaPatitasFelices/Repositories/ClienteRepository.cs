@@ -6,17 +6,8 @@ public class ClienteRepository : IClienteRepository
 {
     private readonly List<Cliente> _clientes;
 
-    // Se necesita para resolver la relacion cliente-mascota. Se recibe como
-    // interfaz para poder sustituirlo (por una implementacion con base de datos
-    // o por un doble de prueba) sin tocar esta clase.
-    private readonly IMascotaRepository _mascotaRepository;
-
-    public ClienteRepository(IMascotaRepository mascotaRepository)
+    public ClienteRepository()
     {
-        ArgumentNullException.ThrowIfNull(mascotaRepository);
-
-        _mascotaRepository = mascotaRepository;
-
         _clientes =
         [
             new Cliente("1030512345", "Javier", "Combita", "3001112233", "javier@correo.com", "Calle 12 #4-56"),
@@ -24,13 +15,11 @@ public class ClienteRepository : IClienteRepository
             new Cliente("79123456", "Andres", "Quintero", "3208889900", direccion: "Av. Siempre Viva 742"),
             new Cliente("41556677", "Lucia", "Barrera", "3013334455", "lucia@correo.com")
         ];
-
-        AsignarMascotasDeEjemplo();
     }
 
     // CREATE
     /// <returns>false si ya existe un cliente con el mismo documento.</returns>
-    public bool RegistrarCliente(Cliente clienteNuevo)
+    public bool Registrar(Cliente clienteNuevo)
     {
         ArgumentNullException.ThrowIfNull(clienteNuevo);
 
@@ -45,17 +34,17 @@ public class ClienteRepository : IClienteRepository
     }
 
     // READ
-    public List<Cliente> ListClientes()
+    public List<Cliente> ObtenerTodos()
     {
         return [.. _clientes];
     }
 
-    public Cliente? BuscarPorId(Guid id)
+    public Cliente? ObtenerPorId(Guid id)
     {
         return _clientes.FirstOrDefault(cliente => cliente.Id == id);
     }
 
-    public Cliente? BuscarPorDocumento(string documento)
+    public Cliente? ObtenerPorDocumento(string documento)
     {
         var documentoBuscado = (documento ?? string.Empty).Trim();
 
@@ -64,7 +53,7 @@ public class ClienteRepository : IClienteRepository
     }
 
     /// <summary>Busca por coincidencia parcial en nombre o apellido.</summary>
-    public List<Cliente> BuscarPorNombre(string textoDeBusqueda)
+    public List<Cliente> FiltrarPorNombre(string textoDeBusqueda)
     {
         var texto = (textoDeBusqueda ?? string.Empty).Trim();
 
@@ -78,13 +67,13 @@ public class ClienteRepository : IClienteRepository
             .ToList();
     }
 
-    public Cliente? BuscarDuenoDeMascota(Guid mascotaId)
+    public Cliente? ObtenerDuenoDeMascota(Guid mascotaId)
     {
         return _clientes.FirstOrDefault(cliente => cliente.TieneMascota(mascotaId));
     }
 
     // UPDATE
-    public bool ActualizarCliente(
+    public bool Actualizar(
         Guid id,
         string nombre,
         string apellido,
@@ -92,7 +81,7 @@ public class ClienteRepository : IClienteRepository
         string? email,
         string? direccion)
     {
-        var clienteExistente = BuscarPorId(id);
+        var clienteExistente = ObtenerPorId(id);
 
         if (clienteExistente is null)
         {
@@ -110,9 +99,9 @@ public class ClienteRepository : IClienteRepository
     /// Elimina al cliente pero NO a sus mascotas: quedan registradas en la clinica
     /// sin dueño asignado, listas para reasignarse.
     /// </summary>
-    public bool EliminarCliente(Guid id)
+    public bool Eliminar(Guid id)
     {
-        var clienteExistente = BuscarPorId(id);
+        var clienteExistente = ObtenerPorId(id);
 
         if (clienteExistente is null)
         {
@@ -127,40 +116,10 @@ public class ClienteRepository : IClienteRepository
         return _clientes.Remove(clienteExistente);
     }
 
-    // RELACION CON MASCOTAS
-    /// <summary>
-    /// Vincula una mascota ya registrada con un cliente. Si la mascota tenia otro
-    /// dueño, se transfiere.
-    /// </summary>
-    public bool AsignarMascota(Guid clienteId, Guid mascotaId)
+    // CONSULTA DE LA RELACION
+    public List<Mascota> ObtenerMascotasDe(Guid clienteId)
     {
-        var cliente = BuscarPorId(clienteId);
-        var mascota = _mascotaRepository.BuscarPorId(mascotaId);
-
-        if (cliente is null || mascota is null)
-        {
-            return false;
-        }
-
-        return cliente.AgregarMascota(mascota);
-    }
-
-    public bool DesasignarMascota(Guid clienteId, Guid mascotaId)
-    {
-        var cliente = BuscarPorId(clienteId);
-        var mascota = _mascotaRepository.BuscarPorId(mascotaId);
-
-        if (cliente is null || mascota is null)
-        {
-            return false;
-        }
-
-        return cliente.QuitarMascota(mascota);
-    }
-
-    public List<Mascota> ListarMascotasDe(Guid clienteId)
-    {
-        var cliente = BuscarPorId(clienteId);
+        var cliente = ObtenerPorId(clienteId);
 
         return cliente is null ? [] : [.. cliente.Mascotas];
     }
@@ -173,44 +132,11 @@ public class ClienteRepository : IClienteRepository
 
     public bool ExisteDocumento(string documento)
     {
-        return BuscarPorDocumento(documento) is not null;
+        return ObtenerPorDocumento(documento) is not null;
     }
 
-    public int ContarClientes()
+    public int Contar()
     {
         return _clientes.Count;
-    }
-
-    /// <summary>
-    /// Reparte algunas de las mascotas del seed entre los clientes del seed para que
-    /// la relacion quede visible al arrancar. Las mascotas que no aparecen aqui
-    /// quedan sin dueño a proposito.
-    /// </summary>
-    private void AsignarMascotasDeEjemplo()
-    {
-        Vincular("1030512345", "Firulais", "Michi");
-        Vincular("52987654", "Luna", "Nala", "Pelusa");
-        Vincular("79123456", "Rocky");
-        Vincular("41556677", "Simba", "Mia");
-    }
-
-    private void Vincular(string documento, params string[] nombresDeMascotas)
-    {
-        var cliente = BuscarPorDocumento(documento);
-
-        if (cliente is null)
-        {
-            return;
-        }
-
-        foreach (var nombre in nombresDeMascotas)
-        {
-            var mascota = _mascotaRepository.BuscarPorNombre(nombre);
-
-            if (mascota is not null)
-            {
-                cliente.AgregarMascota(mascota);
-            }
-        }
     }
 }

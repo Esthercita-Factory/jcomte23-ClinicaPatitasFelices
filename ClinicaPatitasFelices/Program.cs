@@ -1,13 +1,22 @@
+using ClinicaPatitasFelices.Data;
 using ClinicaPatitasFelices.Repositories;
+using ClinicaPatitasFelices.Services;
 using ClinicaPatitasFelices.UI;
 
-// Punto de composicion: aqui se arman las dependencias una sola vez y se pasan
-// hacia abajo. Cuando entre un contenedor de inyeccion de dependencias, estas
-// lineas se reemplazan por los registros del contenedor.
+// Punto de composicion: las dependencias se arman una sola vez y se pasan hacia
+// abajo. Cuando entre un contenedor de inyeccion de dependencias, estas lineas
+// se reemplazan por los registros del contenedor:
+//   services.AddSingleton<IMascotaRepository, MascotaRepository>();
+//   services.AddScoped<IMascotaService, MascotaService>();
 IMascotaRepository mascotaRepository = new MascotaRepository();
-IClienteRepository clienteRepository = new ClienteRepository(mascotaRepository);
+IClienteRepository clienteRepository = new ClienteRepository();
 
-var managerMascota = new ManagerMascota(mascotaRepository);
+IMascotaService mascotaService = new MascotaService(mascotaRepository);
+IClienteService clienteService = new ClienteService(clienteRepository, mascotaRepository);
+
+DatosDeEjemplo.Sembrar(clienteService, mascotaService);
+
+var managerMascota = new ManagerMascota(mascotaService);
 
 string opcion;
 do

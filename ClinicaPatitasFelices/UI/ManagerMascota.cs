@@ -1,17 +1,17 @@
 using ClinicaPatitasFelices.Models;
-using ClinicaPatitasFelices.Repositories;
+using ClinicaPatitasFelices.Services;
 
 namespace ClinicaPatitasFelices.UI;
 
 public class ManagerMascota
 {
-    private readonly IMascotaRepository _mascotaRepository;
+    private readonly IMascotaService _mascotaService;
 
-    public ManagerMascota(IMascotaRepository mascotaRepository)
+    public ManagerMascota(IMascotaService mascotaService)
     {
-        ArgumentNullException.ThrowIfNull(mascotaRepository);
+        ArgumentNullException.ThrowIfNull(mascotaService);
 
-        _mascotaRepository = mascotaRepository;
+        _mascotaService = mascotaService;
     }
 
     public void CrearUnaMascota()
@@ -22,16 +22,14 @@ public class ManagerMascota
         var fechaDeNacimiento = EntradaDeConsola.LeerFechaDeNacimiento("fecha de nacimiento (dd/mm/aaaa): ");
         var sexo = EntradaDeConsola.LeerOpcionDeLista<Sexo>("  Sexo:");
 
-        var mascotaNueva = new Mascota(nombre, especie, raza, fechaDeNacimiento, sexo);
-
-        _mascotaRepository.RegistrarMascota(mascotaNueva);
+        var mascotaNueva = _mascotaService.CrearMascota(nombre, especie, raza, fechaDeNacimiento, sexo);
 
         Console.WriteLine($"\n  >> Mascota registrada: {mascotaNueva}\n");
     }
 
     public void MostrarTodasLasMascotas()
     {
-        var mascotasDeLaBaseDeDatos = _mascotaRepository.ListMascotas();
+        var mascotasDeLaBaseDeDatos = _mascotaService.ConsultarMascotas();
 
         if (mascotasDeLaBaseDeDatos.Count == 0)
         {
