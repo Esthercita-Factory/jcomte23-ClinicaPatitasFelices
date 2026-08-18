@@ -1,3 +1,4 @@
+using ClinicaPatitasFelices.Data;
 using ClinicaPatitasFelices.Models;
 using ClinicaPatitasFelices.Repositories;
 
@@ -11,7 +12,7 @@ public class ClienteRepositoryTests
     [SetUp]
     public void Setup()
     {
-        _clienteRepository = new ClienteRepository();
+        _clienteRepository = new ClienteRepository(new AlmacenEnMemoria());
     }
 
     private Cliente RegistrarCliente(string documento = "9999")
@@ -95,15 +96,17 @@ public class ClienteRepositoryTests
     }
 
     [Test]
-    public void BuscarPorNombre_EncuentraPorCoincidenciaParcialSinImportarMayusculas()
+    public void FiltrarPorNombre_EncuentraPorCoincidenciaParcialSinImportarMayusculas()
     {
+        _clienteRepository.Registrar(new Cliente("52987654", "Marcela", "Rojas", "3104445566", "", ""));
+
         var encontrados = _clienteRepository.FiltrarPorNombre("marcela");
 
         Assert.That(encontrados.Select(cliente => cliente.Documento), Does.Contain("52987654"));
     }
 
     [Test]
-    public void BuscarPorNombre_DevuelveVacioSiElTextoEstaEnBlanco()
+    public void FiltrarPorNombre_DevuelveVacioSiElTextoEstaEnBlanco()
     {
         Assert.That(_clienteRepository.FiltrarPorNombre("   "), Is.Empty);
     }
@@ -111,7 +114,7 @@ public class ClienteRepositoryTests
     [Test]
     public void DosInstanciasDelRepositorioNoCompartenEstado()
     {
-        var otroRepositorio = new ClienteRepository();
+        var otroRepositorio = new ClienteRepository(new AlmacenEnMemoria());
 
         _clienteRepository.Registrar(new Cliente("SOLO-EN-UNO", "Ana", "Diaz", "3001234567", "", ""));
 

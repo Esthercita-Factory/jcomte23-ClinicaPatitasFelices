@@ -21,7 +21,6 @@ public interface IClienteRepository
     public bool Eliminar(Guid id);
 
     // CONSULTA DE LA RELACION
-    // Asignar y desasignar mascotas es coordinacion entre dos entidades: vive en ClienteService.
     public List<Mascota> ObtenerMascotasDe(Guid clienteId);
 
     // VALIDACIONES / UTILIDADES

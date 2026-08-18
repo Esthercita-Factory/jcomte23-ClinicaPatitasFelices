@@ -1,3 +1,4 @@
+using ClinicaPatitasFelices.Data;
 using ClinicaPatitasFelices.Models;
 
 namespace ClinicaPatitasFelices.Repositories;
@@ -6,19 +7,13 @@ public class ClienteRepository : IClienteRepository
 {
     private readonly List<Cliente> _clientes;
 
-    public ClienteRepository()
+    public ClienteRepository(AlmacenEnMemoria almacen)
     {
-        _clientes =
-        [
-            new Cliente("1030512345", "Javier", "Combita", "3001112233", "javier@correo.com", "Calle 12 #4-56"),
-            new Cliente("52987654", "Marcela", "Rojas", "3104445566", "marcela@correo.com", "Carrera 7 #80-21"),
-            new Cliente("79123456", "Andres", "Quintero", "3208889900", "", "Av. Siempre Viva 742"),
-            new Cliente("41556677", "Lucia", "Barrera", "3013334455", "lucia@correo.com", "")
-        ];
-    }
+        ArgumentNullException.ThrowIfNull(almacen);
 
-    // CREATE
-    /// <returns>false si ya existe un cliente con el mismo documento.</returns>
+        _clientes = almacen.Clientes;
+    }
+    
     public bool Registrar(Cliente clienteNuevo)
     {
         ArgumentNullException.ThrowIfNull(clienteNuevo);
@@ -36,7 +31,7 @@ public class ClienteRepository : IClienteRepository
     // READ
     public List<Cliente> ObtenerTodos()
     {
-        return [.. _clientes];
+        return _clientes.ToList();
     }
 
     public Cliente? ObtenerPorId(Guid id)
@@ -46,24 +41,19 @@ public class ClienteRepository : IClienteRepository
 
     public Cliente? ObtenerPorDocumento(string documento)
     {
-        var documentoBuscado = (documento ?? string.Empty).Trim();
-
-        return _clientes.FirstOrDefault(
-            cliente => string.Equals(cliente.Documento, documentoBuscado, StringComparison.OrdinalIgnoreCase));
+        return _clientes.FirstOrDefault(cliente => string.Equals(cliente.Documento, documento, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>Busca por coincidencia parcial en nombre o apellido.</summary>
     public List<Cliente> FiltrarPorNombre(string textoDeBusqueda)
     {
-        var texto = (textoDeBusqueda ?? string.Empty).Trim();
-
-        if (texto.Length == 0)
+        if (textoDeBusqueda.Length == 0)
         {
             return [];
         }
 
         return _clientes
-            .Where(cliente => cliente.NombreCompleto.Contains(texto, StringComparison.OrdinalIgnoreCase))
+            .Where(cliente => cliente.NombreCompleto.Contains(textoDeBusqueda, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
@@ -77,16 +67,21 @@ public class ClienteRepository : IClienteRepository
     public bool Actualizar(Cliente cliente)
     {
         ArgumentNullException.ThrowIfNull(cliente);
+        
+        var registrado = ObtenerPorId(cliente.Id);
 
-        var indice = _clientes.FindIndex(registrado => registrado.Id == cliente.Id);
-
-        if (indice < 0)
+        if (registrado is null)
         {
             return false;
         }
 
-        _clientes[indice] = cliente;
-
+        registrado.Nombre = cliente.Nombre;
+        registrado.Apellido = cliente.Apellido;
+        registrado.Documento = cliente.Documento;
+        registrado.Telefono = cliente.Telefono;
+        registrado.Email = cliente.Email;
+        registrado.Direccion = cliente.Direccion;
+        
         return true;
     }
 

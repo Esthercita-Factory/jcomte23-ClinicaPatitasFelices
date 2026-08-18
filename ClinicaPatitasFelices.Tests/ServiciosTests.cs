@@ -15,7 +15,7 @@ public class ClienteServiceTests
     public void Setup()
     {
         _mascotaRepository = new MascotaRepository();
-        IClienteRepository clienteRepository = new ClienteRepository();
+        IClienteRepository clienteRepository = new ClienteRepository(new AlmacenEnMemoria());
 
         _mascotaService = new MascotaService(_mascotaRepository);
         _clienteService = new ClienteService(clienteRepository, _mascotaRepository);

@@ -6,10 +6,13 @@ using ClinicaPatitasFelices.UI;
 // Punto de composicion: las dependencias se arman una sola vez y se pasan hacia
 // abajo. Cuando entre un contenedor de inyeccion de dependencias, estas lineas
 // se reemplazan por los registros del contenedor:
+//   services.AddSingleton<AlmacenEnMemoria>();
 //   services.AddSingleton<IMascotaRepository, MascotaRepository>();
 //   services.AddScoped<IMascotaService, MascotaService>();
+var almacen = new AlmacenEnMemoria();
+
 IMascotaRepository mascotaRepository = new MascotaRepository();
-IClienteRepository clienteRepository = new ClienteRepository();
+IClienteRepository clienteRepository = new ClienteRepository(almacen);
 
 IMascotaService mascotaService = new MascotaService(mascotaRepository);
 IClienteService clienteService = new ClienteService(clienteRepository, mascotaRepository);

@@ -1,10 +1,5 @@
 namespace ClinicaPatitasFelices.Models;
 
-/// <summary>
-/// Un animal atendido por la clinica. Es un contenedor de datos: representa la fila
-/// de la tabla Mascota. La especie es un dato (<see cref="Models.Especie"/>), no un
-/// subtipo. Las reglas de negocio viven en MascotaService.
-/// </summary>
 public class Mascota
 {
     public Guid Id { get; set; } = Guid.NewGuid();
