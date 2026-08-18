@@ -1,10 +1,29 @@
+using ClinicaPatitasFelices.Interfaces;
+
 namespace ClinicaPatitasFelices.Models;
 
-public class Mascota
+public class Mascota : IAnimal
 {
     public Guid Id { get; set; }
     public string Nombre { get; set; }
+    public string TipoDeAlimentacion { get; set; }
+    public string Especie { get; set; }
     public string Raza { get; set; }
+    public void Reproducirse()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Comer()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Dormir()
+    {
+        throw new NotImplementedException();
+    }
+
     public int EdadEnMeses { get; set; }
 
     public Mascota(string nombre, string raza, int edadEnMeses)

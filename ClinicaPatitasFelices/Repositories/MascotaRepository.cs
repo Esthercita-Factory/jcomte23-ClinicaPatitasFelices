@@ -44,6 +44,84 @@ public static class MascotaRepository
     {
         return Mascotas;
     }
-    
-    
+
+    public static Mascota? BuscarPorId(Guid id)
+    {
+        return Mascotas.FirstOrDefault(mascota => mascota.Id == id);
+    }
+
+    public static Mascota? BuscarPorNombre(string nombre)
+    {
+        var nombreNormalizado = Normalizar(nombre);
+
+        return Mascotas.FirstOrDefault(mascota => mascota.Nombre == nombreNormalizado);
+    }
+
+    public static List<Mascota> BuscarPorRaza(string raza)
+    {
+        var razaNormalizada = Normalizar(raza);
+
+        return Mascotas.Where(mascota => mascota.Raza.Contains(razaNormalizada)).ToList();
+    }
+
+    public static List<Mascota> BuscarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses)
+    {
+        return Mascotas
+            .Where(mascota => mascota.EdadEnMeses >= edadMinimaEnMeses && mascota.EdadEnMeses <= edadMaximaEnMeses)
+            .ToList();
+    }
+
+    // UPDATE
+    public static bool ActualizarMascota(Guid id, string nombre, string raza, int edadEnMeses)
+    {
+        var mascotaExistente = BuscarPorId(id);
+
+        if (mascotaExistente is null)
+        {
+            return false;
+        }
+
+        mascotaExistente.Nombre = Normalizar(nombre);
+        mascotaExistente.Raza = Normalizar(raza);
+        mascotaExistente.EdadEnMeses = edadEnMeses;
+
+        return true;
+    }
+
+    // DELETE
+    public static bool EliminarMascota(Guid id)
+    {
+        var mascotaExistente = BuscarPorId(id);
+
+        if (mascotaExistente is null)
+        {
+            return false;
+        }
+
+        return Mascotas.Remove(mascotaExistente);
+    }
+
+    // VALIDACIONES / UTILIDADES
+    public static bool ExisteId(Guid id)
+    {
+        return Mascotas.Any(mascota => mascota.Id == id);
+    }
+
+    public static bool ExisteNombre(string nombre)
+    {
+        var nombreNormalizado = Normalizar(nombre);
+
+        return Mascotas.Any(mascota => mascota.Nombre == nombreNormalizado);
+    }
+
+    public static int ContarMascotas()
+    {
+        return Mascotas.Count;
+    }
+
+    // Deja el texto igual que como lo guarda el constructor de Mascota
+    private static string Normalizar(string texto)
+    {
+        return texto.Trim().ToLower();
+    }
 }
