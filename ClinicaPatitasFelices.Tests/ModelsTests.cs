@@ -69,7 +69,7 @@ public class ClienteTests
     [Test]
     public void NombreCompleto_UneNombreYApellido()
     {
-        var cliente = new Cliente { Nombre = "Javier", Apellido = "Combita" };
+        var cliente = new Cliente("1030512345", "Javier", "Combita", "3001112233", "", "");
 
         Assert.That(cliente.NombreCompleto, Is.EqualTo("Javier Combita"));
     }
@@ -77,7 +77,7 @@ public class ClienteTests
     [Test]
     public void ClienteNuevo_LlegaConListaVaciaDeMascotasYConIdPropio()
     {
-        var cliente = new Cliente();
+        var cliente = new Cliente("1030512345", "Javier", "Combita", "3001112233", "", "");
 
         Assert.Multiple(() =>
         {

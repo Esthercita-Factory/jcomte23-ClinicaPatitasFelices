@@ -206,8 +206,12 @@ public class ClienteService : IClienteService
         return valor.Trim();
     }
 
-    private static string? NormalizarOpcional(string? valor)
+    /// <summary>
+    /// Email y direccion siguen siendo opcionales para quien llama, pero Cliente los
+    /// guarda como string no anulable: lo que no venga se almacena como cadena vacia.
+    /// </summary>
+    private static string NormalizarOpcional(string? valor)
     {
-        return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        return string.IsNullOrWhiteSpace(valor) ? string.Empty : valor.Trim();
     }
 }

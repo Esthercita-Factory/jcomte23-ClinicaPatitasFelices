@@ -16,7 +16,7 @@ public class ClienteRepositoryTests
 
     private Cliente RegistrarCliente(string documento = "9999")
     {
-        var cliente = new Cliente(documento, "Prueba", "Apellido", "3000000000");
+        var cliente = new Cliente(documento, "Prueba", "Apellido", "3000000000", "", "");
 
         _clienteRepository.Registrar(cliente);
 
@@ -37,7 +37,7 @@ public class ClienteRepositoryTests
         RegistrarCliente("1122334455");
 
         var seRegistro = _clienteRepository.Registrar(
-            new Cliente("1122334455", "Otro", "Cliente", "3009999999"));
+            new Cliente("1122334455", "Otro", "Cliente", "3009999999", "", ""));
 
         Assert.Multiple(() =>
         {
@@ -89,7 +89,7 @@ public class ClienteRepositoryTests
     [Test]
     public void Actualizar_DevuelveFalseSiElClienteNoEstaRegistrado()
     {
-        var ajeno = new Cliente("NO-REGISTRADO", "A", "B", "300");
+        var ajeno = new Cliente("NO-REGISTRADO", "A", "B", "300", "", "");
 
         Assert.That(_clienteRepository.Actualizar(ajeno), Is.False);
     }
@@ -113,7 +113,7 @@ public class ClienteRepositoryTests
     {
         var otroRepositorio = new ClienteRepository();
 
-        _clienteRepository.Registrar(new Cliente("SOLO-EN-UNO", "Ana", "Diaz", "3001234567"));
+        _clienteRepository.Registrar(new Cliente("SOLO-EN-UNO", "Ana", "Diaz", "3001234567", "", ""));
 
         Assert.That(otroRepositorio.ObtenerPorDocumento("SOLO-EN-UNO"), Is.Null);
     }

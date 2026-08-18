@@ -12,8 +12,8 @@ public class ClienteRepository : IClienteRepository
         [
             new Cliente("1030512345", "Javier", "Combita", "3001112233", "javier@correo.com", "Calle 12 #4-56"),
             new Cliente("52987654", "Marcela", "Rojas", "3104445566", "marcela@correo.com", "Carrera 7 #80-21"),
-            new Cliente("79123456", "Andres", "Quintero", "3208889900", direccion: "Av. Siempre Viva 742"),
-            new Cliente("41556677", "Lucia", "Barrera", "3013334455", "lucia@correo.com")
+            new Cliente("79123456", "Andres", "Quintero", "3208889900", "", "Av. Siempre Viva 742"),
+            new Cliente("41556677", "Lucia", "Barrera", "3013334455", "lucia@correo.com", "")
         ];
     }
 
