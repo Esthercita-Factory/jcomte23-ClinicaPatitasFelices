@@ -1,6 +1,6 @@
 namespace ClinicaPatitasFelices.UI;
 
-public class ManagerUser
+public static class ManagerUser
 {
     public static void MostraMenu()
     {

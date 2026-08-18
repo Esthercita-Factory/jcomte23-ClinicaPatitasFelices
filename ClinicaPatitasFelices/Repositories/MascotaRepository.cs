@@ -4,45 +4,50 @@ namespace ClinicaPatitasFelices.Repositories;
 
 public static class MascotaRepository
 {
-    public static List<Mascota> Mascotas { get; set; }
+    // La lista no se expone directamente para que nadie pueda reemplazarla ni
+    // modificarla saltandose las operaciones del repositorio.
+    private static readonly List<Mascota> Mascotas;
 
     static MascotaRepository()
     {
         Mascotas =
         [
-            new Mascota("Firulais", "Criollo", 36),
-            new Mascota("Luna", "Labrador Retriever", 18),
-            new Mascota("Rocky", "Bulldog Frances", 42),
-            new Mascota("Michi", "Siames", 24),
-            new Mascota("Toby", "Beagle", 60),
-            new Mascota("Nala", "Golden Retriever", 12),
-            new Mascota("Simba", "Persa", 30),
-            new Mascota("Max", "Pastor Aleman", 54),
-            new Mascota("Kira", "Husky Siberiano", 27),
-            new Mascota("Pelusa", "Angora", 9),
-            new Mascota("Bruno", "Rottweiler", 48),
-            new Mascota("Canela", "Cocker Spaniel", 21),
-            new Mascota("Coco", "Chihuahua", 15),
-            new Mascota("Sasha", "Border Collie", 33),
-            new Mascota("Manchas", "Dalmata", 39),
-            new Mascota("Nube", "Bichon Maltes", 6),
-            new Mascota("Zeus", "Gran Danes", 45),
-            new Mascota("Mia", "Bengali", 11),
-            new Mascota("Duque", "Schnauzer", 66),
-            new Mascota("Pepa", "Salchicha", 29)
+            new Mascota("Firulais", Especie.Perro, "Criollo", HaceMeses(36), Sexo.Macho),
+            new Mascota("Luna", Especie.Perro, "Labrador Retriever", HaceMeses(18), Sexo.Hembra),
+            new Mascota("Rocky", Especie.Perro, "Bulldog Frances", HaceMeses(42), Sexo.Macho),
+            new Mascota("Michi", Especie.Gato, "Siames", HaceMeses(24), Sexo.Macho),
+            new Mascota("Toby", Especie.Perro, "Beagle", HaceMeses(60), Sexo.Macho),
+            new Mascota("Nala", Especie.Perro, "Golden Retriever", HaceMeses(12), Sexo.Hembra),
+            new Mascota("Simba", Especie.Gato, "Persa", HaceMeses(30), Sexo.Macho),
+            new Mascota("Max", Especie.Perro, "Pastor Aleman", HaceMeses(54), Sexo.Macho),
+            new Mascota("Kira", Especie.Perro, "Husky Siberiano", HaceMeses(27), Sexo.Hembra),
+            new Mascota("Pelusa", Especie.Conejo, "Angora", HaceMeses(9), Sexo.Hembra),
+            new Mascota("Bruno", Especie.Perro, "Rottweiler", HaceMeses(48), Sexo.Macho),
+            new Mascota("Canela", Especie.Perro, "Cocker Spaniel", HaceMeses(21), Sexo.Hembra),
+            new Mascota("Coco", Especie.Perro, "Chihuahua", HaceMeses(15), Sexo.Macho),
+            new Mascota("Sasha", Especie.Perro, "Border Collie", HaceMeses(33), Sexo.Hembra),
+            new Mascota("Manchas", Especie.Perro, "Dalmata", HaceMeses(39), Sexo.Macho),
+            new Mascota("Nube", Especie.Perro, "Bichon Maltes", HaceMeses(6), Sexo.Hembra),
+            new Mascota("Zeus", Especie.Perro, "Gran Danes", HaceMeses(45), Sexo.Macho),
+            new Mascota("Mia", Especie.Gato, "Bengali", HaceMeses(11), Sexo.Hembra),
+            new Mascota("Duque", Especie.Perro, "Schnauzer", HaceMeses(66), Sexo.Macho),
+            new Mascota("Pepa", Especie.Perro, "Salchicha", HaceMeses(29), Sexo.Hembra)
         ];
     }
 
     // CREATE
     public static void RegistrarMascota(Mascota mascotaNueva)
     {
+        ArgumentNullException.ThrowIfNull(mascotaNueva);
+
         Mascotas.Add(mascotaNueva);
     }
-    
+
     // READ
     public static List<Mascota> ListMascotas()
     {
-        return Mascotas;
+        // Copia: quien la reciba no debe poder alterar el almacen.
+        return [.. Mascotas];
     }
 
     public static Mascota? BuscarPorId(Guid id)
@@ -52,16 +57,26 @@ public static class MascotaRepository
 
     public static Mascota? BuscarPorNombre(string nombre)
     {
-        var nombreNormalizado = Normalizar(nombre);
-
-        return Mascotas.FirstOrDefault(mascota => mascota.Nombre == nombreNormalizado);
+        return Mascotas.FirstOrDefault(mascota => SonIguales(mascota.Nombre, nombre));
     }
 
     public static List<Mascota> BuscarPorRaza(string raza)
     {
-        var razaNormalizada = Normalizar(raza);
+        var razaBuscada = (raza ?? string.Empty).Trim();
 
-        return Mascotas.Where(mascota => mascota.Raza.Contains(razaNormalizada)).ToList();
+        return Mascotas
+            .Where(mascota => mascota.Raza.Contains(razaBuscada, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    public static List<Mascota> BuscarPorEspecie(Especie especie)
+    {
+        return Mascotas.Where(mascota => mascota.Especie == especie).ToList();
+    }
+
+    public static List<Mascota> BuscarPorDueno(Guid clienteId)
+    {
+        return Mascotas.Where(mascota => mascota.Dueno?.Id == clienteId).ToList();
     }
 
     public static List<Mascota> BuscarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses)
@@ -72,7 +87,13 @@ public static class MascotaRepository
     }
 
     // UPDATE
-    public static bool ActualizarMascota(Guid id, string nombre, string raza, int edadEnMeses)
+    public static bool ActualizarMascota(
+        Guid id,
+        string nombre,
+        Especie especie,
+        string raza,
+        DateOnly fechaDeNacimiento,
+        Sexo sexo)
     {
         var mascotaExistente = BuscarPorId(id);
 
@@ -81,9 +102,7 @@ public static class MascotaRepository
             return false;
         }
 
-        mascotaExistente.Nombre = Normalizar(nombre);
-        mascotaExistente.Raza = Normalizar(raza);
-        mascotaExistente.EdadEnMeses = edadEnMeses;
+        mascotaExistente.ActualizarDatos(nombre, especie, raza, fechaDeNacimiento, sexo);
 
         return true;
     }
@@ -98,6 +117,9 @@ public static class MascotaRepository
             return false;
         }
 
+        // Se desvincula del dueño para no dejar al cliente apuntando a una mascota borrada.
+        mascotaExistente.Dueno?.QuitarMascota(mascotaExistente);
+
         return Mascotas.Remove(mascotaExistente);
     }
 
@@ -109,9 +131,7 @@ public static class MascotaRepository
 
     public static bool ExisteNombre(string nombre)
     {
-        var nombreNormalizado = Normalizar(nombre);
-
-        return Mascotas.Any(mascota => mascota.Nombre == nombreNormalizado);
+        return Mascotas.Any(mascota => SonIguales(mascota.Nombre, nombre));
     }
 
     public static int ContarMascotas()
@@ -119,9 +139,13 @@ public static class MascotaRepository
         return Mascotas.Count;
     }
 
-    // Deja el texto igual que como lo guarda el constructor de Mascota
-    private static string Normalizar(string texto)
+    private static bool SonIguales(string valorGuardado, string valorBuscado)
     {
-        return texto.Trim().ToLower();
+        return string.Equals(valorGuardado, (valorBuscado ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static DateOnly HaceMeses(int meses)
+    {
+        return DateOnly.FromDateTime(DateTime.Today).AddMonths(-meses);
     }
 }

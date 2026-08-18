@@ -12,10 +12,12 @@ public interface IMascotaRepository
     Mascota? BuscarPorId(Guid id);
     Mascota? BuscarPorNombre(string nombre);
     List<Mascota> BuscarPorRaza(string raza);
+    List<Mascota> BuscarPorEspecie(Especie especie);
+    List<Mascota> BuscarPorDueno(Guid clienteId);
     List<Mascota> BuscarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses);
 
     // UPDATE
-    bool ActualizarMascota(Guid id, string nombre, string raza, int edadEnMeses);
+    bool ActualizarMascota(Guid id, string nombre, Especie especie, string raza, DateOnly fechaDeNacimiento, Sexo sexo);
 
     // DELETE
     bool EliminarMascota(Guid id);

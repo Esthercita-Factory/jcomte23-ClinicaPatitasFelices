@@ -8,7 +8,7 @@ do
 {
     ManagerUser.MostraMenu();
 
-    opcion = Console.ReadLine();
+    opcion = Console.ReadLine() ?? string.Empty;
 
     switch (opcion)
     {
