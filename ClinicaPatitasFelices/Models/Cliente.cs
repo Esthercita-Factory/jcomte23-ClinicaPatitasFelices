@@ -46,6 +46,12 @@ public class Cliente
         FechaDeRegistro = DateOnly.FromDateTime(DateTime.Today);
     }
 
+    public void ActualizarDatosPersonales(string nombre, string apellido)
+    {
+        Nombre = ValidarTexto(nombre, nameof(nombre));
+        Apellido = ValidarTexto(apellido, nameof(apellido));
+    }
+
     public void ActualizarDatosDeContacto(string telefono, string? email, string? direccion)
     {
         Telefono = ValidarTexto(telefono, nameof(telefono));

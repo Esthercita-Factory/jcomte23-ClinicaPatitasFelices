@@ -3,9 +3,18 @@ using ClinicaPatitasFelices.Repositories;
 
 namespace ClinicaPatitasFelices.UI;
 
-public static class ManagerMascota
+public class ManagerMascota
 {
-    public static void CrearUnaMascota()
+    private readonly IMascotaRepository _mascotaRepository;
+
+    public ManagerMascota(IMascotaRepository mascotaRepository)
+    {
+        ArgumentNullException.ThrowIfNull(mascotaRepository);
+
+        _mascotaRepository = mascotaRepository;
+    }
+
+    public void CrearUnaMascota()
     {
         var nombre = EntradaDeConsola.LeerTextoObligatorio("por favor ingrese el nombre de la mascota: ");
         var especie = EntradaDeConsola.LeerOpcionDeLista<Especie>("  Especie:");
@@ -15,14 +24,14 @@ public static class ManagerMascota
 
         var mascotaNueva = new Mascota(nombre, especie, raza, fechaDeNacimiento, sexo);
 
-        MascotaRepository.RegistrarMascota(mascotaNueva);
+        _mascotaRepository.RegistrarMascota(mascotaNueva);
 
         Console.WriteLine($"\n  >> Mascota registrada: {mascotaNueva}\n");
     }
 
-    public static void MostrarTodasLasMascotas()
+    public void MostrarTodasLasMascotas()
     {
-        var mascotasDeLaBaseDeDatos = MascotaRepository.ListMascotas();
+        var mascotasDeLaBaseDeDatos = _mascotaRepository.ListMascotas();
 
         if (mascotasDeLaBaseDeDatos.Count == 0)
         {

@@ -2,15 +2,15 @@ using ClinicaPatitasFelices.Models;
 
 namespace ClinicaPatitasFelices.Repositories;
 
-public static class MascotaRepository
+public class MascotaRepository : IMascotaRepository
 {
-    // La lista no se expone directamente para que nadie pueda reemplazarla ni
-    // modificarla saltandose las operaciones del repositorio.
-    private static readonly List<Mascota> Mascotas;
+    // Cada instancia tiene su propio almacen. En la aplicacion se registra una sola
+    // instancia (singleton) desde el punto de composicion.
+    private readonly List<Mascota> _mascotas;
 
-    static MascotaRepository()
+    public MascotaRepository()
     {
-        Mascotas =
+        _mascotas =
         [
             new Mascota("Firulais", Especie.Perro, "Criollo", HaceMeses(36), Sexo.Macho),
             new Mascota("Luna", Especie.Perro, "Labrador Retriever", HaceMeses(18), Sexo.Hembra),
@@ -36,58 +36,58 @@ public static class MascotaRepository
     }
 
     // CREATE
-    public static void RegistrarMascota(Mascota mascotaNueva)
+    public void RegistrarMascota(Mascota mascotaNueva)
     {
         ArgumentNullException.ThrowIfNull(mascotaNueva);
 
-        Mascotas.Add(mascotaNueva);
+        _mascotas.Add(mascotaNueva);
     }
 
     // READ
-    public static List<Mascota> ListMascotas()
+    public List<Mascota> ListMascotas()
     {
         // Copia: quien la reciba no debe poder alterar el almacen.
-        return [.. Mascotas];
+        return [.. _mascotas];
     }
 
-    public static Mascota? BuscarPorId(Guid id)
+    public Mascota? BuscarPorId(Guid id)
     {
-        return Mascotas.FirstOrDefault(mascota => mascota.Id == id);
+        return _mascotas.FirstOrDefault(mascota => mascota.Id == id);
     }
 
-    public static Mascota? BuscarPorNombre(string nombre)
+    public Mascota? BuscarPorNombre(string nombre)
     {
-        return Mascotas.FirstOrDefault(mascota => SonIguales(mascota.Nombre, nombre));
+        return _mascotas.FirstOrDefault(mascota => SonIguales(mascota.Nombre, nombre));
     }
 
-    public static List<Mascota> BuscarPorRaza(string raza)
+    public List<Mascota> BuscarPorRaza(string raza)
     {
         var razaBuscada = (raza ?? string.Empty).Trim();
 
-        return Mascotas
+        return _mascotas
             .Where(mascota => mascota.Raza.Contains(razaBuscada, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
-    public static List<Mascota> BuscarPorEspecie(Especie especie)
+    public List<Mascota> BuscarPorEspecie(Especie especie)
     {
-        return Mascotas.Where(mascota => mascota.Especie == especie).ToList();
+        return _mascotas.Where(mascota => mascota.Especie == especie).ToList();
     }
 
-    public static List<Mascota> BuscarPorDueno(Guid clienteId)
+    public List<Mascota> BuscarPorDueno(Guid clienteId)
     {
-        return Mascotas.Where(mascota => mascota.Dueno?.Id == clienteId).ToList();
+        return _mascotas.Where(mascota => mascota.Dueno?.Id == clienteId).ToList();
     }
 
-    public static List<Mascota> BuscarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses)
+    public List<Mascota> BuscarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses)
     {
-        return Mascotas
+        return _mascotas
             .Where(mascota => mascota.EdadEnMeses >= edadMinimaEnMeses && mascota.EdadEnMeses <= edadMaximaEnMeses)
             .ToList();
     }
 
     // UPDATE
-    public static bool ActualizarMascota(
+    public bool ActualizarMascota(
         Guid id,
         string nombre,
         Especie especie,
@@ -108,7 +108,7 @@ public static class MascotaRepository
     }
 
     // DELETE
-    public static bool EliminarMascota(Guid id)
+    public bool EliminarMascota(Guid id)
     {
         var mascotaExistente = BuscarPorId(id);
 
@@ -120,23 +120,23 @@ public static class MascotaRepository
         // Se desvincula del dueño para no dejar al cliente apuntando a una mascota borrada.
         mascotaExistente.Dueno?.QuitarMascota(mascotaExistente);
 
-        return Mascotas.Remove(mascotaExistente);
+        return _mascotas.Remove(mascotaExistente);
     }
 
     // VALIDACIONES / UTILIDADES
-    public static bool ExisteId(Guid id)
+    public bool ExisteId(Guid id)
     {
-        return Mascotas.Any(mascota => mascota.Id == id);
+        return _mascotas.Any(mascota => mascota.Id == id);
     }
 
-    public static bool ExisteNombre(string nombre)
+    public bool ExisteNombre(string nombre)
     {
-        return Mascotas.Any(mascota => SonIguales(mascota.Nombre, nombre));
+        return _mascotas.Any(mascota => SonIguales(mascota.Nombre, nombre));
     }
 
-    public static int ContarMascotas()
+    public int ContarMascotas()
     {
-        return Mascotas.Count;
+        return _mascotas.Count;
     }
 
     private static bool SonIguales(string valorGuardado, string valorBuscado)
