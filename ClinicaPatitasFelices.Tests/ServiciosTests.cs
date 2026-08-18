@@ -14,11 +14,17 @@ public class ClienteServiceTests
     [SetUp]
     public void Setup()
     {
-        _mascotaRepository = new MascotaRepository();
-        IClienteRepository clienteRepository = new ClienteRepository(new AlmacenEnMemoria());
+        // Un solo almacen para los dos repositorios, igual que en la aplicacion.
+        var almacen = new AlmacenEnMemoria();
+
+        _mascotaRepository = new MascotaRepository(almacen);
+        IClienteRepository clienteRepository = new ClienteRepository(almacen);
 
         _mascotaService = new MascotaService(_mascotaRepository);
         _clienteService = new ClienteService(clienteRepository, _mascotaRepository);
+
+        // Los clientes los crea cada prueba; aqui solo hacen falta las mascotas.
+        DatosDeEjemplo.SembrarMascotas(_mascotaService);
     }
 
     private Cliente CrearCliente(string documento = "9999")
@@ -136,13 +142,8 @@ public class ClienteServiceTests
     public void CrearMascotaParaCliente_RegistraYVinculaEnUnSoloPaso()
     {
         var cliente = CrearCliente();
-        var mascotaNueva = new Mascota
-        {
-            Nombre = "Huesos",
-            Especie = Especie.Perro,
-            Raza = "Criollo",
-            FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddMonths(-8)
-        };
+        var mascotaNueva = new Mascota(
+            "Huesos", Especie.Perro, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddMonths(-8), Sexo.Macho);
 
         var seCreo = _clienteService.CrearMascotaParaCliente(cliente.Id, mascotaNueva);
 
@@ -157,13 +158,8 @@ public class ClienteServiceTests
     [Test]
     public void CrearMascotaParaCliente_DevuelveFalseSiElClienteNoExiste()
     {
-        var mascotaNueva = new Mascota
-        {
-            Nombre = "Huesos",
-            Especie = Especie.Perro,
-            Raza = "Criollo",
-            FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddMonths(-8)
-        };
+        var mascotaNueva = new Mascota(
+            "Huesos", Especie.Perro, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddMonths(-8), Sexo.Macho);
 
         Assert.That(_clienteService.CrearMascotaParaCliente(Guid.NewGuid(), mascotaNueva), Is.False);
     }
@@ -196,14 +192,25 @@ public class ClienteServiceTests
     }
 
     [Test]
-    public void DatosDeEjemplo_VinculaMascotasConSusDuenos()
+    public void DatosDeEjemplo_SiembraTodoYVinculaMascotasConSusDuenos()
     {
-        DatosDeEjemplo.Sembrar(_clienteService, _mascotaService);
+        var almacen = new AlmacenEnMemoria();
+        IMascotaRepository mascotaRepository = new MascotaRepository(almacen);
+        IClienteRepository clienteRepository = new ClienteRepository(almacen);
+        IMascotaService mascotaService = new MascotaService(mascotaRepository);
+        IClienteService clienteService = new ClienteService(clienteRepository, mascotaRepository);
 
-        var cliente = _clienteService.ConsultarClientePorDocumento("52987654");
+        DatosDeEjemplo.Sembrar(clienteService, mascotaService);
 
-        Assert.That(cliente, Is.Not.Null);
-        Assert.That(cliente!.Mascotas.Count, Is.EqualTo(3));
+        var cliente = clienteService.ConsultarClientePorDocumento("52987654");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mascotaService.ContarMascotas(), Is.EqualTo(20));
+            Assert.That(clienteService.ContarClientes(), Is.EqualTo(4));
+            Assert.That(cliente, Is.Not.Null);
+            Assert.That(cliente!.Mascotas, Has.Count.EqualTo(3));
+        });
     }
 }
 
@@ -214,7 +221,9 @@ public class MascotaServiceTests
     [SetUp]
     public void Setup()
     {
-        _mascotaService = new MascotaService(new MascotaRepository());
+        _mascotaService = new MascotaService(new MascotaRepository(new AlmacenEnMemoria()));
+
+        DatosDeEjemplo.SembrarMascotas(_mascotaService);
     }
 
     [Test]
@@ -263,7 +272,7 @@ public class MascotaServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(cachorros, Is.Not.Empty);
-            Assert.That(cachorros.All(mascota => mascota.EdadEnMeses <= 12), Is.True);
+            Assert.That(cachorros.All(mascota => mascota.CalcularEdadEnMeses() <= 12), Is.True);
         });
     }
 

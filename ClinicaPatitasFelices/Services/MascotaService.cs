@@ -23,14 +23,12 @@ public class MascotaService : IMascotaService
 
     public Mascota CrearMascota(string nombre, Especie especie, string raza, DateOnly fechaDeNacimiento, Sexo sexo)
     {
-        var mascotaNueva = new Mascota
-        {
-            Nombre = ValidarTexto(nombre, nameof(nombre)),
-            Especie = especie,
-            Raza = ValidarTexto(raza, nameof(raza)),
-            FechaDeNacimiento = ValidarFechaDeNacimiento(fechaDeNacimiento),
-            Sexo = sexo
-        };
+        var mascotaNueva = new Mascota(
+            ValidarTexto(nombre, nameof(nombre)),
+            especie,
+            ValidarTexto(raza, nameof(raza)),
+            ValidarFechaDeNacimiento(fechaDeNacimiento),
+            sexo);
 
         _mascotaRepository.Registrar(mascotaNueva);
 

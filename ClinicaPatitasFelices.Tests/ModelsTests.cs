@@ -10,51 +10,51 @@ public class MascotaTests
 {
     private static Mascota MascotaDe(int edadEnMeses)
     {
-        return new Mascota
-        {
-            Nombre = "Simba",
-            Especie = Especie.Gato,
-            Raza = "Persa",
-            FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddMonths(-edadEnMeses)
-        };
+        return new Mascota(
+            "Simba",
+            Especie.Gato,
+            "Persa",
+            DateOnly.FromDateTime(DateTime.Today).AddMonths(-edadEnMeses),
+            Sexo.Macho);
     }
 
     [Test]
-    public void EdadEnMeses_SeCalculaContraLaFechaActual()
+    public void CalcularEdadEnMeses_SeCalculaContraLaFechaActual()
     {
-        Assert.That(MascotaDe(30).EdadEnMeses, Is.EqualTo(30));
+        Assert.That(MascotaDe(30).CalcularEdadEnMeses(), Is.EqualTo(30));
     }
 
     [Test]
-    public void EdadEnMeses_NuncaEsNegativa()
+    public void CalcularEdadEnMeses_NuncaDevuelveNegativo()
     {
-        var mascota = new Mascota { FechaDeNacimiento = DateOnly.FromDateTime(DateTime.Today).AddDays(5) };
+        var mascota = new Mascota(
+            "Nube", Especie.Perro, "Criollo", DateOnly.FromDateTime(DateTime.Today).AddDays(5), Sexo.Hembra);
 
-        Assert.That(mascota.EdadEnMeses, Is.EqualTo(0));
+        Assert.That(mascota.CalcularEdadEnMeses(), Is.EqualTo(0));
     }
 
     [Test]
-    public void EdadDescriptiva_SeExpresaEnAniosYMeses()
+    public void DescribirEdad_SeExpresaEnAniosYMeses()
     {
-        Assert.That(MascotaDe(14).EdadDescriptiva, Is.EqualTo("1 año y 2 meses"));
+        Assert.That(MascotaDe(14).DescribirEdad(), Is.EqualTo("1 año y 2 meses"));
     }
 
     [Test]
-    public void EdadDescriptiva_OmiteLosAniosCuandoNoLlegaAlPrimero()
+    public void DescribirEdad_OmiteLosAniosCuandoNoLlegaAlPrimero()
     {
-        Assert.That(MascotaDe(3).EdadDescriptiva, Is.EqualTo("3 meses"));
+        Assert.That(MascotaDe(3).DescribirEdad(), Is.EqualTo("3 meses"));
     }
 
     [Test]
-    public void EdadDescriptiva_OmiteLosMesesCuandoElAnioEsExacto()
+    public void DescribirEdad_OmiteLosMesesCuandoElAnioEsExacto()
     {
-        Assert.That(MascotaDe(24).EdadDescriptiva, Is.EqualTo("2 años"));
+        Assert.That(MascotaDe(24).DescribirEdad(), Is.EqualTo("2 años"));
     }
 
     [Test]
     public void MascotaNueva_LlegaSinDuenoYConIdPropio()
     {
-        var mascota = new Mascota();
+        var mascota = MascotaDe(12);
 
         Assert.Multiple(() =>
         {

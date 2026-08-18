@@ -9,9 +9,10 @@ using ClinicaPatitasFelices.UI;
 //   services.AddSingleton<AlmacenEnMemoria>();
 //   services.AddSingleton<IMascotaRepository, MascotaRepository>();
 //   services.AddScoped<IMascotaService, MascotaService>();
+
 var almacen = new AlmacenEnMemoria();
 
-IMascotaRepository mascotaRepository = new MascotaRepository();
+IMascotaRepository mascotaRepository = new MascotaRepository(almacen);
 IClienteRepository clienteRepository = new ClienteRepository(almacen);
 
 IMascotaService mascotaService = new MascotaService(mascotaRepository);

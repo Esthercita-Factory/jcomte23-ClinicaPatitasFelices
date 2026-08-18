@@ -54,7 +54,7 @@ public class ManagerMascota
         Console.WriteLine($"Nombre: {mascota.Nombre}");
         Console.WriteLine($"Especie: {mascota.Especie}");
         Console.WriteLine($"Raza: {mascota.Raza}");
-        Console.WriteLine($"Nacimiento: {mascota.FechaDeNacimiento:dd/MM/yyyy} ({mascota.EdadDescriptiva})");
+        Console.WriteLine($"Nacimiento: {mascota.FechaDeNacimiento:dd/MM/yyyy} ({mascota.DescribirEdad()})");
         Console.WriteLine($"Sexo: {mascota.Sexo}");
         Console.WriteLine($"Peso: {(mascota.PesoEnKg is null ? "sin registrar" : $"{mascota.PesoEnKg} kg")}");
         Console.WriteLine($"Esterilizada: {(mascota.EstaEsterilizada ? "si" : "no")}");

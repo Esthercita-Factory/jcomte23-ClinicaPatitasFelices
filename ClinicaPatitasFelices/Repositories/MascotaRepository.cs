@@ -1,38 +1,15 @@
+using ClinicaPatitasFelices.Data;
 using ClinicaPatitasFelices.Models;
 
 namespace ClinicaPatitasFelices.Repositories;
 
 public class MascotaRepository : IMascotaRepository
 {
-    // Cada instancia tiene su propio almacen. En la aplicacion se registra una sola
-    // instancia (singleton) desde el punto de composicion.
     private readonly List<Mascota> _mascotas;
 
-    public MascotaRepository()
+    public MascotaRepository(AlmacenEnMemoria almacen)
     {
-        _mascotas =
-        [
-            new Mascota { Nombre = "Firulais", Especie = Especie.Perro, Raza = "Criollo", FechaDeNacimiento = HaceMeses(36), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Luna", Especie = Especie.Perro, Raza = "Labrador Retriever", FechaDeNacimiento = HaceMeses(18), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Rocky", Especie = Especie.Perro, Raza = "Bulldog Frances", FechaDeNacimiento = HaceMeses(42), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Michi", Especie = Especie.Gato, Raza = "Siames", FechaDeNacimiento = HaceMeses(24), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Toby", Especie = Especie.Perro, Raza = "Beagle", FechaDeNacimiento = HaceMeses(60), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Nala", Especie = Especie.Perro, Raza = "Golden Retriever", FechaDeNacimiento = HaceMeses(12), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Simba", Especie = Especie.Gato, Raza = "Persa", FechaDeNacimiento = HaceMeses(30), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Max", Especie = Especie.Perro, Raza = "Pastor Aleman", FechaDeNacimiento = HaceMeses(54), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Kira", Especie = Especie.Perro, Raza = "Husky Siberiano", FechaDeNacimiento = HaceMeses(27), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Pelusa", Especie = Especie.Conejo, Raza = "Angora", FechaDeNacimiento = HaceMeses(9), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Bruno", Especie = Especie.Perro, Raza = "Rottweiler", FechaDeNacimiento = HaceMeses(48), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Canela", Especie = Especie.Perro, Raza = "Cocker Spaniel", FechaDeNacimiento = HaceMeses(21), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Coco", Especie = Especie.Perro, Raza = "Chihuahua", FechaDeNacimiento = HaceMeses(15), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Sasha", Especie = Especie.Perro, Raza = "Border Collie", FechaDeNacimiento = HaceMeses(33), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Manchas", Especie = Especie.Perro, Raza = "Dalmata", FechaDeNacimiento = HaceMeses(39), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Nube", Especie = Especie.Perro, Raza = "Bichon Maltes", FechaDeNacimiento = HaceMeses(6), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Zeus", Especie = Especie.Perro, Raza = "Gran Danes", FechaDeNacimiento = HaceMeses(45), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Mia", Especie = Especie.Gato, Raza = "Bengali", FechaDeNacimiento = HaceMeses(11), Sexo = Sexo.Hembra },
-            new Mascota { Nombre = "Duque", Especie = Especie.Perro, Raza = "Schnauzer", FechaDeNacimiento = HaceMeses(66), Sexo = Sexo.Macho },
-            new Mascota { Nombre = "Pepa", Especie = Especie.Perro, Raza = "Salchicha", FechaDeNacimiento = HaceMeses(29), Sexo = Sexo.Hembra }
-        ];
+        _mascotas = almacen.Mascotas;
     }
 
     // CREATE
@@ -82,7 +59,12 @@ public class MascotaRepository : IMascotaRepository
     public List<Mascota> FiltrarPorRangoDeEdad(int edadMinimaEnMeses, int edadMaximaEnMeses)
     {
         return _mascotas
-            .Where(mascota => mascota.EdadEnMeses >= edadMinimaEnMeses && mascota.EdadEnMeses <= edadMaximaEnMeses)
+            .Where(mascota =>
+            {
+                var edadEnMeses = mascota.CalcularEdadEnMeses();
+
+                return edadEnMeses >= edadMinimaEnMeses && edadEnMeses <= edadMaximaEnMeses;
+            })
             .ToList();
     }
 
@@ -135,10 +117,5 @@ public class MascotaRepository : IMascotaRepository
     private static bool SonIguales(string valorGuardado, string valorBuscado)
     {
         return string.Equals(valorGuardado, (valorBuscado ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static DateOnly HaceMeses(int meses)
-    {
-        return DateOnly.FromDateTime(DateTime.Today).AddMonths(-meses);
     }
 }
